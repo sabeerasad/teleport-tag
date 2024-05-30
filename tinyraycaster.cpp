@@ -20,13 +20,14 @@ void unpack_color(const uint32_t &color, uint8_t &r, uint8_t &g, uint8_t &b, uin
     a = (color >> 24) & 255;
 }
 
-void write_image(const std::string filename, const std::vector<uint32_t> &image, const size_t w, const size_t h) {
+void write_image(const std::string filename, const std::vector<uint32_t> &image, const size_t w, const size_t h) { // image is the framebuffer (a 1-D vector)
     assert(image.size() == w*h);
     std::ofstream ofs(filename); // standard output file stream
     ofs << "P6\n" << w << " " << h << "\n255\n"; // header text (metadata?)
     for (size_t i = 0; i < w*h; i++) {
         uint8_t r, g, b, a;
-        unpack_color(image[i], r, g, b, a);
+        unpack_color(image[i], r, g, b, a); // the framebuffer is unpacked \
+                                               the colors are appended to the file stream (how?)
         ofs << static_cast<char>(r) << static_cast<char>(g) << static_cast<char>(b);
     }
     ofs.close();
