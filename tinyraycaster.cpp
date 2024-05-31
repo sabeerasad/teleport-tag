@@ -33,6 +33,25 @@ void write_image(const std::string filename, const std::vector<uint32_t> &image,
     ofs.close();
 }
 
+// This function draws each block of our game map
+void draw_rectangle(std::vector<uint32_t> &image, const size_t img_w, const size_t img_h, const size_t x,
+                    const size_t y, const size_t w, const size_t h, const uint32_t color) {
+    assert(image.size() == img_w*img_h);
+    // this is essentially doing the same thing as the gradient loop in main()
+    // for every "block", we get its top-left corner as (x,y) and that block's width and height
+    // then we run a loop from x to x+w and y to y+h and fill with cyan color
+    // (to start from the x and y of a particular block we pass those in as constants that vary in the loop in main())
+    // future Sabeer I hope you get this as clearly as you did back then
+    for (size_t i = 0; i < w; i++) {
+        for (size_t j = 0; j < h; j++) {
+            size_t cx = x + i;
+            size_t cy = y + j;
+            assert(cx < img_w && cy < img_h);
+            image[cx + cy*img_w] = color;
+        }
+    }
+}
+
 int main() {
     const size_t win_w = 512;
     const size_t win_h = 512;
@@ -41,6 +60,27 @@ int main() {
                                                             (supposed initialization to a white image)
     // The following loops loop over the entire image and sweeps a red-green gradient with \
        red increasing vertically downwards and green increasing horizontally to the write
+
+    const size_t map_w = 16;
+    const size_t map_h = 16;
+    const char map[] = "0000222222220000"\
+                       "1              0"\
+                       "1      11111   0"\
+                       "1     0        0"\
+                       "0     0  1110000"\
+                       "0     2        0"\
+                       "0   30400      0"\
+                       "0   0   11100  0"\
+                       "0   0   0      0"\
+                       "0   0   1  00000"\
+                       "0       6      0"\
+                       "2       1      0"\
+                       "0       0      0"\
+                       "0 0000000      0"\
+                       "0              0"\
+                       "0002222222200000"; // our game map | are these numbers random? each char represents a "rectangle block"
+    assert(sizeof(map) == map_w*map_h + 1); // +1 for \0 terminator
+
     for (size_t j = 0; j < win_h; j++) {
         for (size_t i = 0; i < win_w; i++) {
             uint8_t r = 255 * j/float(win_h);
@@ -49,5 +89,18 @@ int main() {
             framebuffer[i+j*win_w] = pack_color(r, g, b); // the pixel (i, j) is represented by a 32-bit color
         }
     }
+
+    // rect is one block unit
+    const size_t rect_w = win_w/map_w;
+    const size_t rect_h = win_h/map_h;
+    for (size_t j = 0; j < map_h; j++) {
+        for (size_t i = 0; i < map_w; i++) {
+            if (map[i+j*map_w] == ' ') continue;
+            size_t rect_x = i*rect_w;
+            size_t rect_y = j*rect_h;
+            draw_rectangle(framebuffer, win_w, win_h, rect_x, rect_y, rect_w, rect_h, pack_color(0, 255, 255)); // O(n⁴) 💀
+        }
+    }
+
     write_image("./out.ppm", framebuffer, win_w, win_h);
 }
