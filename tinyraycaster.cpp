@@ -80,6 +80,8 @@ int main() {
                        "0              0"\
                        "0002222222200000"; // our game map | are these numbers random? each char represents a "rectangle block"
     assert(sizeof(map) == map_w*map_h + 1); // +1 for \0 terminator
+    float player_x = 3.456; // player x position (in units relative to map-size)
+    float player_y = 2.345; // player y position (in units relative to map-size)
 
     for (size_t j = 0; j < win_h; j++) {
         for (size_t i = 0; i < win_w; i++) {
@@ -101,6 +103,9 @@ int main() {
             draw_rectangle(framebuffer, win_w, win_h, rect_x, rect_y, rect_w, rect_h, pack_color(0, 255, 255)); // O(n⁴) 💀
         }
     }
+
+    // draw player on map
+    draw_rectangle(framebuffer, win_w, win_h, player_x*rect_w, player_y*rect_h, 5, 5, pack_color(255, 255, 255));
 
     write_image("./out.ppm", framebuffer, win_w, win_h);
 }
