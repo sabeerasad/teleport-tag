@@ -82,6 +82,7 @@ int main() {
     assert(sizeof(map) == map_w*map_h + 1); // +1 for \0 terminator
     float player_x = 3.456; // player x position (in units relative to map-size)
     float player_y = 2.345; // player y position (in units relative to map-size)
+    float player_a = 1.523; // player facing toward this angle down from horizontal (in radians)
 
     for (size_t j = 0; j < win_h; j++) {
         for (size_t i = 0; i < win_w; i++) {
@@ -106,6 +107,18 @@ int main() {
 
     // draw player on map
     draw_rectangle(framebuffer, win_w, win_h, player_x*rect_w, player_y*rect_h, 5, 5, pack_color(255, 255, 255));
+
+    // draw one ray
+    for (float d = 0; d < 20; d+=0.05) { // why 20 is an arbitrary upper limit relative to MAP size\
+                                            and 0.05 is the step size of sliding the point along line of sight
+        float x = player_x + d*cos(player_a);
+        float y = player_y + d*sin(player_a);
+        if (map[int(x)+int(y)*map_w] != ' ') break; // breaking loop when an obstacle is hit (obstacle is any non-' ' char)
+
+        size_t pix_x = x*rect_w;
+        size_t pix_y = y*rect_h;
+        framebuffer[pix_x + pix_y*win_w] = pack_color(255, 255, 255); 
+    }
 
     write_image("./out.ppm", framebuffer, win_w, win_h);
 }
