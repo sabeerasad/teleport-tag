@@ -1,4 +1,5 @@
 #include <cmath>
+#include <math.h>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -83,6 +84,7 @@ int main() {
     float player_x = 3.456; // player x position (in units relative to map-size)
     float player_y = 2.345; // player y position (in units relative to map-size)
     float player_a = 1.523; // player facing toward this angle down from horizontal (in radians)
+    const float fov = M_PI/3;
 
     for (size_t j = 0; j < win_h; j++) {
         for (size_t i = 0; i < win_w; i++) {
@@ -108,16 +110,24 @@ int main() {
     // draw player on map
     draw_rectangle(framebuffer, win_w, win_h, player_x*rect_w, player_y*rect_h, 5, 5, pack_color(255, 255, 255));
 
-    // draw one ray
-    for (float d = 0; d < 20; d+=0.05) { // why 20 is an arbitrary upper limit relative to MAP size\
-                                            and 0.05 is the step size of sliding the point along line of sight
-        float x = player_x + d*cos(player_a);
-        float y = player_y + d*sin(player_a);
-        if (map[int(x)+int(y)*map_w] != ' ') break; // breaking loop when an obstacle is hit (obstacle is any non-' ' char)
+    // draw 512 rays within fov (512 because window_width = 512 px)
+    for (size_t i = 0; i < win_w; i++) {
 
-        size_t pix_x = x*rect_w;
-        size_t pix_y = y*rect_h;
-        framebuffer[pix_x + pix_y*win_w] = pack_color(255, 255, 255); 
+        float angle = player_a - (fov / 2) + ((fov * i)/float(win_w)); // calculating angle of each ray\
+                                                                          by subtracting half of FOV from line of sight\
+                                                                          and then adding a fraction of the FOV relative\
+                                                                          to the window_width
+
+        for (float d = 0; d < 20; d+=0.05) { // why 20 is an arbitrary upper limit relative to MAP size\
+                                                and 0.05 is the step size of sliding the point along line of sight
+            float x = player_x + d*cos(angle);
+            float y = player_y + d*sin(angle);
+            if (map[int(x)+int(y)*map_w] != ' ') break; // breaking loop when an obstacle is hit (obstacle is any non-' ' char)
+
+            size_t pix_x = x*rect_w;
+            size_t pix_y = y*rect_h;
+            framebuffer[pix_x + pix_y*win_w] = pack_color(255, 255, 255); 
+        }
     }
 
     write_image("./out.ppm", framebuffer, win_w, win_h);
